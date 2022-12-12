@@ -24,6 +24,7 @@ ordered_cmd = {
         3:commands['flower'],
         4:commands['main_app']}
 
+runningProcesses: dict[int,subprocess.Popen] = {}
 
 @app.get('/')
 def help():
@@ -72,11 +73,12 @@ def start_app():
     
 
 def _start_app():
-    
+    global runningProcesses
     for i in range(len(ordered_cmd)):
         try:
             print(f'[*] executing command: {ordered_cmd[i+1]} ')
-            subprocess.Popen(ordered_cmd[i+1], shell=True, executable='/bin/bash')
+            p=subprocess.Popen(ordered_cmd[i+1], shell=True, executable='/bin/bash')
+            runningProcesses[i+1] = p
             time.sleep(2)
         except Exception as e:
             print('Failed to execute command')
@@ -85,9 +87,20 @@ def _start_app():
 
 def _restart_app():...
 
-def _stop_app():...
+def _stop_app():
+    if len(runningProcesses) != 0:
+        for proc in runningProcesses:
+            try:
+                print(f'[*] Stopping process: {proc}')
+                runningProcesses[proc].terminate()
+                time.sleep(2)
+            except Exception as e:
+                print(f'Failed to stop process: {proc}')
+        return True
+    print('[*] No running processes')
+    return 'No running processes'
 
-
+    
 if __name__ == "__main__":
     app.run(host="0.0.0.0",port=5001)
 
