@@ -12,10 +12,10 @@ repo_uri = "git@github.com:mehmet-zahid/mengine.git"
 VENV_CMD = "source /home/venv/bin/activate"
 
 commands = {
-    'celery': f'pwd;{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery worker',
-    'main_app': f'pwd;{VENV_CMD}&&cd /home/mengine/recram_ai && python3 app.py',
-    'flower': f'pwd;{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery flower --port=5002',
-    'redis': 'pwd;redis-server --port 7979'
+    'celery': f'{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery worker',
+    'main_app': f'{VENV_CMD}&&cd /home/mengine/recram_ai && python3 app.py',
+    'flower': f'{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery flower --port=5002',
+    'redis': 'redis-server --port 7979'
     }
 
 ordered_cmd = {
@@ -73,11 +73,10 @@ def start_app():
 
 def _start_app():
     
-    redirect('/sync_github')
     for i in range(len(ordered_cmd)):
         try:
             print(f'[*] executing command: {ordered_cmd[i+1]} ')
-            subprocess.Popen(ordered_cmd[i+1], shell=True)
+            subprocess.Popen(ordered_cmd[i+1], shell=True, executable='/bin/bash')
             time.sleep(2)
         except Exception as e:
             print('Failed to execute command')
