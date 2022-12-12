@@ -1,7 +1,7 @@
 from flask import Flask, redirect, jsonify
 import subprocess
-import os
 import time
+
 
 app = Flask(__name__)
 
@@ -9,8 +9,21 @@ AVAILABLE_COMMANDS = ['sync_github', 'restart_app', 'clone_repo','start_app', 's
                       'delete_repo', 'start_telegram_bot', 'stop_telegram_bot']
 
 repo_uri = "git@github.com:mehmet-zahid/mengine.git"
+VENV_CMD = "source /home/venv/bin/activate"
 
-print(os.path.abspath(os.path.dirname(__file__)))
+commands = {
+    'celery': f'pwd;{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery worker',
+    'main_app': f'pwd;{VENV_CMD}&&cd /home/mengine/recram_ai && python3 app.py',
+    'flower': f'pwd;{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery flower --port=5002',
+    'redis': 'pwd;redis-server --port 7979'
+    }
+
+ordered_cmd = {
+        1:commands['redis'],
+        2:commands['celery'],
+        3:commands['flower'],
+        4:commands['main_app']}
+
 
 @app.get('/')
 def help():
@@ -53,22 +66,23 @@ def start_telegram_bot():...
 def stop_telegram_bot():...
 
 @app.get('/start_app')
-def start_app():...
+def start_app():
+    res = _start_app()
+    return jsonify({'result': res})
     
 
 def _start_app():
-    commands = [{'celery': 'cd mengine/ && celery -A app.celery worker',
-                'main_app': 'cd mengine/ && python3 app.py',
-                'flower': 'cd mengine/ && celery -A app.celery flower --port=5002',
-                'redis': 'redis-server'}]
+    
     redirect('/sync_github')
-    for command in commands:
+    for i in range(len(ordered_cmd)):
         try:
-            print(f'executing command: {command} ')
-            subprocess.Popen(command, shell=True)
+            print(f'[*] executing command: {ordered_cmd[i+1]} ')
+            subprocess.Popen(ordered_cmd[i+1], shell=True)
             time.sleep(2)
         except Exception as e:
+            print('Failed to execute command')
             print(e)
+    return True      
 
 def _restart_app():...
 
