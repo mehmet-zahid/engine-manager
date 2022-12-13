@@ -51,8 +51,6 @@ def sync_github():
     print('Failed to sync repository. Try again later.')
     return jsonify({'success': False,'message': 'Failed to sync repository'})
 
-@app.get('/restart_app')
-def restart_project():...
 
 @app.get('/clone_repo')
 def clone_repo():...
@@ -70,6 +68,15 @@ def stop_telegram_bot():...
 def start_app():
     res = _start_app()
     return jsonify({'result': res})
+
+@app.get('/restart_app')
+def restart_project():...
+
+
+@app.get('/stop_app')
+def stop_app():
+    res= _stop_app()
+    return jsonify({'result': res})
     
 
 def _start_app():
@@ -85,7 +92,6 @@ def _start_app():
             print(e)
     return True      
 
-def _restart_app():...
 
 def _stop_app():
     if len(runningProcesses) != 0:
@@ -100,7 +106,7 @@ def _stop_app():
     print('[*] No running processes')
     return 'No running processes'
 
-    
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0",port=5001)
 
