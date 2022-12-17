@@ -98,7 +98,7 @@ def _stop_app():
         for proc in runningProcesses:
             try:
                 print(f'[*] Stopping process: {proc}')
-                runningProcesses[proc]
+                runningProcesses[proc].kill()
                 time.sleep(2)
             except Exception as e:
                 print(f'Failed to stop process: {proc}')
