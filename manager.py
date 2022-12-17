@@ -13,7 +13,7 @@ VENV_CMD = "source /home/venv/bin/activate"
 
 commands = {
     'celery': f'{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery worker',
-    'main_app': f'{VENV_CMD}&&cd /home/mengine/recram_ai && python3 app.py',
+    'main_app': f'{VENV_CMD}&&cd /home/mengine/recram_ai && gunicorn -w 3 app:app',
     'flower': f'{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery flower --port=5002',
     'redis': 'redis-server --port 7979'
     }
@@ -98,7 +98,7 @@ def _stop_app():
         for proc in runningProcesses:
             try:
                 print(f'[*] Stopping process: {proc}')
-                runningProcesses[proc].kill()
+                runningProcesses[proc]
                 time.sleep(2)
             except Exception as e:
                 print(f'Failed to stop process: {proc}')
