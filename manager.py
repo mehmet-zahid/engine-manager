@@ -107,11 +107,11 @@ def _stop_app():
             try:
                 print(f'[*] Stopping process: {proc}')
                 runningProcesses[proc].kill()
-                results[runningProcesses[proc]] = 'success'
+                results[f'command {proc}'] = 'success'
                 time.sleep(2)
             except Exception as e:
                 print(f'Failed to stop process: {proc}')
-                results[runningProcesses[proc]] = 'failure'
+                results[f'command {proc}'] = 'failure'
         return jsonify(results)
     print('[*] No running processes')
     return jsonify({'success': False, 'message':'No running processes'})
