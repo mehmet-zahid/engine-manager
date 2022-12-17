@@ -13,7 +13,7 @@ VENV_CMD = "source /home/venv/bin/activate"
 
 commands = {
     'celery': f'{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery worker',
-    'main_app': f'{VENV_CMD}&&cd /home/mengine/recram_ai && gunicorn -w 3 app:app',
+    'main_app': f'{VENV_CMD}&&cd /home/mengine/recram_ai && gunicorn -w 3 app:app -b 0.0.0.0:5000',
     'flower': f'{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery flower --port=5002',
     'redis': 'redis-server --port 7979'
     }
@@ -108,6 +108,6 @@ def _stop_app():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0",port=5001)
+    app.run(host="0.0.0.0")
 
 
