@@ -67,47 +67,58 @@ def stop_telegram_bot():...
 @app.get('/start_app')
 def start_app():
     res = _start_app()
-    return jsonify({'result': res})
+    return res
 
 @app.get('/restart_app')
-def restart_project():...
+def restart_app():
+    _stop_app
+    time.sleep(5)
+    _start_app
+    return jsonify({'success': True, 'message': 'Restarted app successfully'})
 
 
 @app.get('/stop_app')
 def stop_app():
     res= _stop_app()
-    return jsonify({'result': res})
+    return res
     
 
 def _start_app():
     global runningProcesses
-    for i in range(len(ordered_cmd)):
-        try:
-            print(f'[*] executing command: {ordered_cmd[i+1]} ')
-            p=subprocess.Popen(ordered_cmd[i+1], shell=True, executable='/bin/bash')
-            runningProcesses[i+1] = p
-            time.sleep(2)
-        except Exception as e:
-            print('Failed to execute command')
-            print(e)
-    return True      
+    if len(runningProcesses)==0:
+        for i in range(len(ordered_cmd)):
+            try:
+                print(f'[*] executing command: {ordered_cmd[i+1]} ')
+                p=subprocess.Popen(ordered_cmd[i+1], shell=True, executable='/bin/bash')
+                runningProcesses[i+1] = p
+                time.sleep(2)
+            except Exception as e:
+                print('Failed to execute command')
+                print(e)
+        return jsonify({'success': True, 'message': 'app has been run successfully.'})
+    else:
+        return jsonify({'success': False, 'message': 'app is already running !'})
 
 
 def _stop_app():
     if len(runningProcesses) != 0:
+        results = {}
         for proc in runningProcesses:
             try:
                 print(f'[*] Stopping process: {proc}')
                 runningProcesses[proc].kill()
+                results[runningProcesses[proc]] = 'success'
                 time.sleep(2)
             except Exception as e:
                 print(f'Failed to stop process: {proc}')
-        return True
+                results[runningProcesses[proc]] = 'failure'
+        return jsonify(results)
     print('[*] No running processes')
-    return 'No running processes'
+    return jsonify({'success': False, 'message':'No running processes'})
 
 
 if __name__ == "__main__":
+    _start_app()
     app.run(host="0.0.0.0",port=5001)
 
 
