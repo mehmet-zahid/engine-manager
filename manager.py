@@ -104,16 +104,21 @@ def _stop_app():
     global runningProcesses
     if len(runningProcesses) != 0:
         results = {}
-        for proc in runningProcesses:
-            try:
-                print(f'[*] Stopping process: {proc}')
-                runningProcesses[proc].kill()
-                runningProcesses.pop(proc)
-                results[f'command {proc}'] = 'success'
-                time.sleep(2)
-            except Exception as e:
-                print(f'Failed to stop process: {proc}')
-                results[f'command {proc}'] = 'failure'
+        for num,proc in runningProcesses.items():
+            if len(runningProcesses) != 0:
+                try:
+                    print(f'[*] Stopping process: {proc}')
+                    proc.kill()
+                    runningProcesses.pop(num)
+                    results[f'command {proc}'] = 'success'
+                    time.sleep(2)
+                except Exception as e:
+                    print(f'Failed to stop process: {proc}')
+                    results[f'command {proc}'] = 'failure'
+            else:
+                print('no running process')
+                return jsonify({'success': False, 'message':'No running processes'})
+        
         return jsonify(results)
     print('[*] No running processes')
     return jsonify({'success': False, 'message':'No running processes'})
