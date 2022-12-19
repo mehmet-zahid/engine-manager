@@ -1,3 +1,4 @@
+#!/bin/bash
 
 source /home/venv/bin/activate
 redis-server --port 7979 &

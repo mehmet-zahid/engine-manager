@@ -102,13 +102,14 @@ def _start_app():
 
 def _stop_app():
     global runningProcesses
+    copy_rp = runningProcesses.copy()
     if len(runningProcesses) != 0:
         results = {}
-        for num,proc in runningProcesses.items():
+        for num,proc in copy_rp.items():
             if len(runningProcesses) != 0:
                 try:
-                    print(f'[*] Stopping process: {proc}')
-                    proc.kill()
+                    print(f'[*] Stopping process: {num}')
+                    runningProcesses[num].kill()
                     runningProcesses.pop(num)
                     results[f'command {proc}'] = 'success'
                     time.sleep(2)
