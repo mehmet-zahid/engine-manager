@@ -9,12 +9,12 @@ AVAILABLE_COMMANDS = ['sync_github', 'restart_app', 'clone_repo','start_app', 's
                       'delete_repo', 'start_telegram_bot', 'stop_telegram_bot']
 
 repo_uri = "git@github.com:mehmet-zahid/mengine.git"
-VENV_CMD = "source /home/venv/bin/activate"
+
 
 commands = {
-    'celery': f'{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery worker',
-    'main_app': f'{VENV_CMD}&&cd /home/mengine/recram_ai && gunicorn -w 3 app:app -b 0.0.0.0:5000',
-    'flower': f'{VENV_CMD}&&cd /home/mengine/recram_ai && celery -A app.celery flower --port=5002',
+    'celery': f'cd /home/aiengine/recram_ai && celery -A app.celery worker',
+    'main_app': f'cd /home/aiengine/recram_ai && gunicorn -w 3 app:app -b 0.0.0.0:5000',
+    'flower': f'cd /home/aiengine/recram_ai && celery -A app.celery flower --port=5002',
     'redis': 'redis-server --port 7979'
     }
 
@@ -35,7 +35,7 @@ def help():
 def sync_github():
     print('[*] Attemting to sync ...')
     print('[*] Syncing with github')
-    p =subprocess.Popen(f'cd mengine/ && git pull origin',
+    p =subprocess.Popen(f'cd aiengine/ && git pull origin',
                         shell=True, stdout=subprocess.PIPE, text=True)
     for i in range(2):
         try:
@@ -106,19 +106,15 @@ def _stop_app():
     if len(runningProcesses) != 0:
         results = {}
         for num,proc in copy_rp.items():
-            if len(runningProcesses) != 0:
-                try:
-                    print(f'[*] Stopping process: {num}')
-                    runningProcesses[num].kill()
-                    runningProcesses.pop(num)
-                    results[f'command {proc}'] = 'success'
-                    time.sleep(2)
-                except Exception as e:
-                    print(f'Failed to stop process: {proc}')
-                    results[f'command {proc}'] = 'failure'
-            else:
-                print('no running process')
-                return jsonify({'success': False, 'message':'No running processes'})
+            try:
+                print(f'[*] Stopping process: {num}')
+                runningProcesses[num].kill()
+                runningProcesses.pop(num)
+                results[num] = 'success'
+                time.sleep(2)
+            except Exception as e:
+                print(f'Failed to stop process: {proc}')
+                results[f'command {proc}'] = 'failure'
         
         return jsonify(results)
     print('[*] No running processes')
