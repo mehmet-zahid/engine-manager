@@ -1,15 +1,40 @@
 from flask import Flask, redirect, jsonify
 import subprocess
 import time
-
+import logging
 
 app = Flask(__name__)
 
-AVAILABLE_COMMANDS = ['sync_github', 'restart_app', 'clone_repo','start_app', 'stop_app',
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+AVAILABLE_COMMANDS = ['sync_aiengine', 'sync_manager', 'restart_app', 'clone_repo','start_app', 'stop_app',
                       'delete_repo', 'start_telegram_bot', 'stop_telegram_bot']
 
-repo_uri = "git@github.com:mehmet-zahid/mengine.git"
+repo_uri = "git@github.com:mehmet-zahid/aiengine.git"
 
+INITIAL_PARAMS = [{
+    "name": "redis",
+    "command": "redis-server --port 7979",
+    "priority": 1
+    },
+    {
+    "name": "celery",
+    "command": "cd /home/aiengine/recram_ai && celery -A app.celery worker",
+    "priority": 2
+    },
+    {
+    "name": "flower",
+    "command": "cd /home/aiengine/recram_ai && celery -A app.celery flower --port=5002",
+    "priority": 3
+    },
+    {
+    "name": "main",
+    "command": "cd /home/aiengine/recram_ai && gunicorn -w 3 app:app -b 0.0.0.0:5000",
+    "priority": 4
+    }]
 
 commands = {
     'celery': f'cd /home/aiengine/recram_ai && celery -A app.celery worker',
@@ -31,26 +56,17 @@ def help():
     return AVAILABLE_COMMANDS
 
 
-@app.get('/sync_github')
+@app.get('/sync_aiengine')
 def sync_github():
-    print('[*] Attemting to sync ...')
-    print('[*] Syncing with github')
-    p =subprocess.Popen(f'cd aiengine/ && git pull origin',
-                        shell=True, stdout=subprocess.PIPE, text=True)
-    for i in range(2):
-        try:
-            print('[*] Waiting for the result ...')
-            r = p.communicate(timeout=5)[0]
-            print('Succesfully synchronized repository')
-            return jsonify({'success': True,
-                        'message': 'Succesfully synchronized repository',
-                        'result': r})
-        except TimeoutError :
-            print('[*] TimeoutError. Retrying ...')
+    logger.info('[*] Attemting to sync aiengine with remote github repo ...')
+    return _sync_repo(repo_path='/home/aiengine')
 
-    print('Failed to sync repository. Try again later.')
-    return jsonify({'success': False,'message': 'Failed to sync repository'})
+    
 
+@app.get('/sync_manager')
+def sync_manager():
+    logger.info('[*] Attemting to sync manager with remote github repo...')
+    return _sync_repo(repo_path='/home/engine-manager')
 
 @app.get('/clone_repo')
 def clone_repo():...
@@ -71,9 +87,9 @@ def start_app():
 
 @app.get('/restart_app')
 def restart_app():
-    _stop_app
+    _stop_app()
     time.sleep(5)
-    _start_app
+    _start_app()
     return jsonify({'success': True, 'message': 'Restarted app successfully'})
 
 
@@ -82,42 +98,69 @@ def stop_app():
     res= _stop_app()
     return res
     
+def _sync_repo(repo_path: str):
+    try:
+        p =subprocess.Popen(f'cd {repo_path} && git pull',shell=True, stdout=subprocess.PIPE, text=True)
+    except Exception as e:
+        logger.info(f'[*] Exception: {e}')
+        return jsonify({'error': True, 'message': str(e)}) 
+
+    logger.info('[*] Waiting for the result ...')
+    for i in range(2):
+        try:
+            r = p.communicate(timeout=10)[0]
+            logger.info('Succesfully synchronized repository')
+            return jsonify({'success': True,
+                        'message': 'Succesfully synchronized repository',
+                        'result': r})
+        except TimeoutError :
+            logger.info('[*] TimeoutError. Retrying ...')
+        
+
+    logger.info('Failed to sync repository. Try again later.')
+    return jsonify({'error': True, 'message': 'Failed to sync repository'})
 
 def _start_app():
     global runningProcesses
     if len(runningProcesses)==0:
-        for i in range(len(ordered_cmd)):
+        for element in INITIAL_PARAMS:
             try:
-                print(f'[*] executing command: {ordered_cmd[i+1]} ')
-                p=subprocess.Popen(ordered_cmd[i+1], shell=True, executable='/bin/bash')
-                runningProcesses[i+1] = p
+                logger.info(f'Starting {element["name"]}')
+                logger.info(f'[*] Executing {element["priority"]}: {element["command"]}')
+                p=subprocess.Popen(element["command"], shell=True)
+                runningProcesses[element["priority"]] = p
                 time.sleep(2)
             except Exception as e:
-                print('Failed to execute command')
-                print(e)
-        return jsonify({'success': True, 'message': 'app has been run successfully.'})
+                logger.error(f'Failed to execute {element["priority"]}: {element["command"]}')
+                logger.error(e)
+        return jsonify({'success': True, 'message': 'service has been successfully initialized .'})
     else:
-        return jsonify({'success': False, 'message': 'app is already running !'})
+        return jsonify({'success': False, 'message': 'service has minumum one process running! \
+            \nFirst stop all running processes!'})
 
 
 def _stop_app():
     global runningProcesses
-    copy_rp = runningProcesses.copy()
-    if len(runningProcesses) != 0:
+    run_proc = runningProcesses.copy()
+    lentgh_run_proc = len([k for k, v in runningProcesses.elements()])
+    if lentgh_run_proc != 0:
         results = {}
-        for num,proc in copy_rp.items():
+        logger.info(f"results: {results}")
+        for num,proc in run_proc.items():
             try:
-                print(f'[*] Stopping process: {num}')
+                logger.info(f'[*] Stopping process {num}: {proc}')
                 runningProcesses[num].kill()
                 runningProcesses.pop(num)
-                results[num] = 'success'
+                results[f"{num}--> {proc}"] = 'success'
+                logger.info(f"results: {results}")
                 time.sleep(2)
             except Exception as e:
-                print(f'Failed to stop process: {proc}')
-                results[f'command {proc}'] = 'failure'
+                logger.error(f'Failed to stop process {num}: {proc}')
+                logger.info(f"results: {results}")
+                results[f"{num}--> {proc}"] = 'failure'
         
         return jsonify(results)
-    print('[*] No running processes')
+    logger.info('[*] No running processes')
     return jsonify({'success': False, 'message':'No running processes'})
 
 
