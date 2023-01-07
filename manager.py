@@ -17,12 +17,12 @@ repo_uri = "git@github.com:mehmet-zahid/aiengine.git"
 
 INITIAL_PARAMS = [{
     "name": "redis",
-    "command": "redis-server --port 7979",
+    "command": "redis-server",
     "priority": 1
     },
     {
     "name": "celery",
-    "command": "cd /home/aiengine/recram_ai && celery -A app.celery worker",
+    "command": "cd /home/aiengine/recram_ai && celery --app=app.celery worker -l info",
     "priority": 2
     },
     {
@@ -37,10 +37,10 @@ INITIAL_PARAMS = [{
     }]
 
 commands = {
-    'celery': f'cd /home/aiengine/recram_ai && celery -A app.celery worker',
+    'celery': f'cd /home/aiengine/recram_ai && celery -A app.celery worker -l info',
     'main_app': f'cd /home/aiengine/recram_ai && gunicorn -w 3 app:app -b 0.0.0.0:5000',
     'flower': f'cd /home/aiengine/recram_ai && celery -A app.celery flower --port=5002',
-    'redis': 'redis-server --port 7979'
+    'redis': 'redis-server --port 6379'
     }
 
 ordered_cmd = {
@@ -165,8 +165,8 @@ def _stop_app():
 
 
 if __name__ == "__main__":
-    with app.app_context():
-        _start_app()
-    app.run(host="0.0.0.0",port=5001)
+    #with app.app_context():
+    _start_app()
+    app.run(host="0.0.0.0", port=5001)
 
 
