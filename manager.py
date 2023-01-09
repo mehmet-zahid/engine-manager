@@ -22,12 +22,12 @@ INITIAL_PARAMS = [{
     },
     {
     "name": "celery",
-    "command": "cd /home/aiengine/recram_ai && celery --app=app.celery worker -l info",
+    "command": "cd /home/aiengine/recram_ai && celery -A app.app_c worker -l info",
     "priority": 2
     },
     {
     "name": "flower",
-    "command": "cd /home/aiengine/recram_ai && celery -A app.celery flower --port=5002",
+    "command": "cd /home/aiengine/recram_ai && celery -A app.app_c flower --port=5002",
     "priority": 3
     },
     {
@@ -37,9 +37,9 @@ INITIAL_PARAMS = [{
     }]
 
 commands = {
-    'celery': f'cd /home/aiengine/recram_ai && celery -A app.celery worker -l info',
+    'celery': f'cd /home/aiengine/recram_ai && celery -A app.app_c worker -l info',
     'main_app': f'cd /home/aiengine/recram_ai && gunicorn -w 3 app:app -b 0.0.0.0:5000',
-    'flower': f'cd /home/aiengine/recram_ai && celery -A app.celery flower --port=5002',
+    'flower': f'cd /home/aiengine/recram_ai && celery -A app.app_c flower --port=5002',
     'redis': 'redis-server --port 6379'
     }
 
