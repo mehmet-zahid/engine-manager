@@ -165,10 +165,10 @@ def _stop_app():
 
 
 if __name__ == "__main__":
-    #with app.app_context():
-    _sync_repo(repo_path="/home/aiengine")
-    _sync_repo(repo_path="/home/engine-manager")
-    _start_app()
+    with app.app_context():
+        _sync_repo(repo_path="/home/aiengine")
+        _sync_repo(repo_path="/home/engine-manager")
+        _start_app()
     app.run(host="0.0.0.0", port=5001)
 
 
