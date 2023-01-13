@@ -22,7 +22,7 @@ INITIAL_PARAMS = [{
     },
     {
     "name": "celery",
-    "command": "cd /home/aiengine/recram_ai && celery -A app.app_c worker -l info",
+    "command": "cd /home/aiengine/recram_ai && celery -A app.app_c worker -c 2 -l info",
     "priority": 2
     },
     {
